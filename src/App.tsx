@@ -5,16 +5,7 @@ import { Form } from "./form/Form";
 import { connectToBikeAndReadData } from "./ble/ble";
 import { AVERAGE_SPEED_KMH } from "./utils/constants";
 import { Feature, LineString } from "geojson";
-
-// Define types for our data
-interface BikeData {
-  speed?: number;
-  heartRate?: number;
-  cadence?: number;
-  distance?: number;
-  power?: number;
-  [key: string]: number | undefined;
-}
+import { DecodedIndoorBikeData } from "./ble/indoorBikeData";
 
 function App() {
   const [running, setRunning] = useState<boolean>(false);
@@ -29,7 +20,7 @@ function App() {
       if (demo) {
         setSpeed(AVERAGE_SPEED_KMH);
       } else {
-        await connectToBikeAndReadData((data: BikeData) => {
+        await connectToBikeAndReadData((data: DecodedIndoorBikeData) => {
           if (data.speed !== undefined) {
             setSpeed(data.speed);
           }

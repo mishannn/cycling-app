@@ -1,21 +1,11 @@
 import { BleClient, numberToUUID } from "@capacitor-community/bluetooth-le";
-import { indoorBikeData } from "./indoorBikeData";
-
-// Define the interface for the data returned by indoorBikeData.decode
-interface BikeData {
-  speed?: number;
-  heartRate?: number;
-  cadence?: number;
-  distance?: number;
-  power?: number;
-  [key: string]: number | undefined;
-}
+import { DecodedIndoorBikeData, indoorBikeData } from "./indoorBikeData";
 
 const FTMS_SERVICE_UUID = numberToUUID(0x1826);
 const INDOOR_BIKE_DATA_UUID = numberToUUID(0x2ad2);
 
 export async function connectToBikeAndReadData(
-  callback: (data: BikeData) => void,
+  callback: (data: DecodedIndoorBikeData) => void,
 ) {
   await BleClient.initialize();
 
@@ -35,7 +25,8 @@ export async function connectToBikeAndReadData(
     FTMS_SERVICE_UUID,
     INDOOR_BIKE_DATA_UUID,
     (value) => {
-      callback(indoorBikeData.decode(value));
+      const decodedData = indoorBikeData.decode(value)
+      callback(decodedData);
     },
   );
 }

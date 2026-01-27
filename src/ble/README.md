@@ -1,0 +1,1 @@
+BLE integration is used from project Auuki: https://github.com/dvmarinoff/Auuki/blob/master/src/ble/ftms/indoor-bike-data.js
