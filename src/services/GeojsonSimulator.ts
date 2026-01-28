@@ -1,6 +1,6 @@
 import { Feature } from "geojson";
 
-interface Position {
+export interface Position {
   lat: number;
   lon: number;
   bearing: number;

@@ -5,13 +5,13 @@
   "type": "module",
   "homepage": "/cycling-app",
   "dependencies": {
-    "leaflet": "^1.9.4",
+    "@capacitor-community/bluetooth-le": "^8.0.0",
+    "ahooks": "^3.9.6",
+    "maplibre-gl": "^5.17.0",
     "prop-types": "^15.8.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-leaflet": "^5.0.0",
     "react-scripts": "5.0.1",
-    "togpx": "^0.5.4",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -46,6 +46,7 @@
     "@types/prop-types": "^15.7.15",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.182.0",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "eslint": "^9.39.2",

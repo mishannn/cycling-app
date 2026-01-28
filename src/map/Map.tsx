@@ -1,57 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import GeojsonSimulator from "../services/GeojsonSimulator";
-import bikePng from "./bike.png";
-import RotatedMarker from "./RotatedMarker";
-import { KeepAwake } from "@capacitor-community/keep-awake";
-import { Capacitor } from "@capacitor/core";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import GeojsonSimulator, { Position } from "../services/GeojsonSimulator";
 import { formatTime } from "../utils/time";
-import CustomZoomControl from "./CustomZoomControl";
 import {
-  SHOW_ROUTE_LINE,
+  // SHOW_ROUTE_LINE,
   TIME_UPDATE_INTERVAL_MS,
   UPDATE_INTERVAL_MS,
 } from "../utils/constants";
 import { Feature, LineString } from "geojson";
-
-const bikeIcon = L.icon({
-  iconUrl: bikePng,
-  iconSize: [60, 60],
-  iconAnchor: [30, 30],
-});
-
-const MapCenterUpdater: React.FC<{ position: [number, number] }> = ({
-  position,
-}) => {
-  const map = useMap();
-
-  useEffect(() => {
-    if (Capacitor.getPlatform() === "web") {
-      return;
-    }
-    KeepAwake.keepAwake();
-    return () => {
-      KeepAwake.allowSleep();
-    };
-  }, []);
-
-  useEffect(() => {
-    const mapContainer = document.querySelector(".leaflet-container");
-    if (mapContainer) {
-      mapContainer.removeAttribute("tabindex");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (position) {
-      map.setView(position, map.getZoom());
-    }
-  }, [position, map]);
-
-  return null;
-};
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import bikeIcon from './bike.png'
+import { useThrottle } from "ahooks";
 
 const MapWithMovingMarker: React.FC<{
   feature: Feature<LineString>;
@@ -59,61 +18,156 @@ const MapWithMovingMarker: React.FC<{
   heartRate: number;
 }> = ({ feature, speed, heartRate }) => {
   const simulator = useMemo(() => new GeojsonSimulator(feature, 0), [feature]);
-  const [position, setPosition] = useState<[number, number]>([
-    feature.geometry.coordinates[0][1],
-    feature.geometry.coordinates[0][0],
-  ]);
-  const [bearing, setBearing] = useState<number>(0);
-  const [throttledTime, setThrottledTime] = useState<number>(0);
+
+  // Initialize map
+
+  const mapRef = useRef<maplibregl.Map>(null);
+  const markerRef = useRef<maplibregl.Marker>(null);
+  const mapContainer = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newPosition = simulator.nextStep(UPDATE_INTERVAL_MS / 1000);
-      if (newPosition) {
-        setPosition([newPosition.lat, newPosition.lon]);
-        setBearing(newPosition.bearing);
-      } else {
-        clearInterval(interval);
-      }
-    }, UPDATE_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [simulator]);
+    if (!mapContainer.current) {
+      const msg = "Map container is not ready"
+      console.error(msg)
+      alert(msg)
+
+      return
+    }
+
+    const center = {
+      lat: feature.geometry.coordinates[0][1],
+      lng: feature.geometry.coordinates[0][0],
+    }
+
+    const map = new maplibregl.Map({
+      container: mapContainer.current,
+      style: "https://tiles.openfreemap.org/styles/liberty",
+      center: center,
+      zoom: 18,
+      pitch: 0,
+      bearing: 0,
+      canvasContextAttributes: { antialias: true },
+      attributionControl: false,
+    });
+
+    map.on("load", () => {
+      map.addControl(new maplibregl.NavigationControl({
+        showZoom: true,
+        visualizePitch: false,
+        visualizeRoll: false,
+        showCompass: false,
+      }));
+
+      map.addControl(new maplibregl.AttributionControl(), "bottom-left")
+
+      map.addLayer({
+        id: "3d-buildings",
+        source: "openmaptiles",
+        "source-layer": "building",
+        type: "fill-extrusion",
+        minzoom: 15,
+        paint: {
+          "fill-extrusion-color": "#aaa",
+          "fill-extrusion-height": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            15,
+            0,
+            16,
+            ["get", "height"]
+          ],
+          "fill-extrusion-base": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            15,
+            0,
+            16,
+            ["get", "min_height"]
+          ],
+          "fill-extrusion-opacity": 0.8,
+        },
+      });
+
+      const el = document.createElement('div');
+      el.className = 'marker';
+      el.style.backgroundImage =
+        `url(${bikeIcon})`;
+      el.style.backgroundSize = 'cover'
+      el.style.width = `60px`;
+      el.style.height = `60px`;
+
+      // add marker to map
+      const marker = new maplibregl.Marker({ element: el })
+      marker.setLngLat(center);
+      marker.setRotationAlignment("map")
+      marker.addTo(map)
+
+      markerRef.current = marker
+    });
+
+    mapRef.current = map
+
+    return () => {
+      mapRef.current = null
+      map.remove()
+    };
+  }, [feature]);
+
+  // Update speed
 
   useEffect(() => {
     simulator.setSpeedKmh(speed);
   }, [simulator, speed]);
 
+  // Watch position
+
+  const [position, setPosition] = useState<Position>({
+    lon: feature.geometry.coordinates[0][0],
+    lat: feature.geometry.coordinates[0][1],
+    bearing: 0
+  });
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setThrottledTime(simulator.getEstimatedTime());
-    }, TIME_UPDATE_INTERVAL_MS);
+      const newPosition = simulator.nextStep(UPDATE_INTERVAL_MS / 1000);
+      if (newPosition) {
+        setPosition(newPosition);
+      } else {
+        clearInterval(interval);
+      }
+    }, UPDATE_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, [simulator]);
 
+  useEffect(() => {
+    markerRef.current?.setLngLat(position)
+    markerRef.current?.setRotation(position.bearing)
+  }, [position])
+
+  const throttledPosition = useThrottle(position, { wait: 1000 })
+  useEffect(() => {
+    mapRef.current?.easeTo({
+      center: throttledPosition,
+      bearing: throttledPosition.bearing,
+      animate: true,
+      duration: 1000,
+      easing: (val) => val,
+    })
+  }, [throttledPosition])
+
+  // Update estimate time
+
+  const throttledTime = useThrottle(simulator.getEstimatedTime(), { wait: TIME_UPDATE_INTERVAL_MS });
+
   return (
     <div style={{ height: "100%", width: "100%" }}>
-      <MapContainer
-        center={position}
-        zoom={18}
-        style={{ height: "100%", width: "100%" }}
-        zoomControl={false}
-        attributionControl={false}
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        {SHOW_ROUTE_LINE && (
-          <Polyline
-            positions={feature.geometry.coordinates.map((coord) => [
-              coord[1],
-              coord[0],
-            ])}
-            color="blue"
-          />
-        )}
-        <RotatedMarker position={position} icon={bikeIcon} rotation={bearing} />
-        <MapCenterUpdater position={position} />
-        <CustomZoomControl />
-      </MapContainer>
+      <div
+        ref={mapContainer}
+        style={{ width: "100%", height: "100vh" }}
+      />
       <div
         style={{
           position: "fixed",
