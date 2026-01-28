@@ -6,7 +6,12 @@
   "homepage": "/cycling-app",
   "dependencies": {
     "@capacitor-community/bluetooth-le": "^8.0.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.7",
+    "@mui/material": "^7.3.7",
     "ahooks": "^3.9.6",
+    "caniuse-lite": "^1.0.30001766",
     "maplibre-gl": "^5.17.0",
     "prop-types": "^15.8.1",
     "react": "^19.0.0",
@@ -16,6 +21,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "lint": "eslint ./src",
     "build": "BUILD_PATH=./docs react-scripts build",
     "eject": "react-scripts eject"
   },

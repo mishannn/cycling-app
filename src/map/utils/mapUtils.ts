@@ -6,6 +6,7 @@ import { startPreviousTripAnimation } from "./helpers";
 import bikeIcon from '../bike.png';
 import bikeBWIcon from '../bike_bw.png';
 import { UPDATE_INTERVAL_MS } from "../../utils/constants";
+import GeojsonSimulator from "@/services/GeojsonSimulator";
 
 // Load previous trip data from localStorage
 export const loadPreviousTripData = (
@@ -111,9 +112,8 @@ export const initializeMap = (
       prevEl.className = 'previous-trip-marker';
       prevEl.style.backgroundImage = `url(${bikeBWIcon})`;
       prevEl.style.backgroundSize = 'cover';
-      prevEl.style.width = `40px`;
-      prevEl.style.height = `40px`;
-      prevEl.style.opacity = '0.7';
+      prevEl.style.width = `60px`;
+      prevEl.style.height = `60px`;
 
       const prevMarker = new maplibregl.Marker({ element: prevEl });
       prevMarker.setLngLat([previousTrip.points[0].lon, previousTrip.points[0].lat]);
@@ -137,15 +137,15 @@ export const initializeMap = (
 
 // Update simulator speed
 export const updateSimulatorSpeed = (
-  simulator: any, // GeojsonSimulator type would be better but we'll keep it simple for now
+  simulator: GeojsonSimulator,
   speed: number
 ) => {
-  simulator.setSpeedKmh(speed);
+  simulator.speedKmh = speed;
 };
 
 // Start position tracking and trip recording
 export const startPositionTracking = (
-  simulator: any, // GeojsonSimulator type would be better but we'll keep it simple for now
+  simulator: GeojsonSimulator,
   routeId: string,
   tripRecordingRef: React.MutableRefObject<SavedTripPoint[]>,
   tripStartTimeRef: React.MutableRefObject<number>,

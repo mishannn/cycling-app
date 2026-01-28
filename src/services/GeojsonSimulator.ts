@@ -11,6 +11,7 @@ export default class GeojsonSimulator {
   private currentIndex: number;
   private progress: number;
   private speed!: number;
+  private startTime: number | null = null;
 
   constructor(feature: Feature, speedKmh: number = 10) {
     if (feature.type !== "Feature" || feature.geometry.type !== "LineString") {
@@ -19,16 +20,17 @@ export default class GeojsonSimulator {
       );
     }
     this.coordinates = feature.geometry.coordinates;
-    this.setSpeedKmh(speedKmh);
+    this.speedKmh = speedKmh;
     this.currentIndex = 0;
     this.progress = 0; // Прогресс между точками (0 - 1)
+    this.startTime = null;
   }
 
-  setSpeedKmh(speedKmh: number) {
+  set speedKmh(speedKmh: number) {
     this.speed = (speedKmh * 1000) / 3600; // Переводим в м/с
   }
 
-  getSpeedKmh(): number {
+  get speedKmh(): number {
     return (this.speed * 3600) / 1000; // Переводим в м/с
   }
 
@@ -61,6 +63,11 @@ export default class GeojsonSimulator {
   }
 
   nextStep(deltaTime: number): Position | null {
+    // Initialize start time if this is the first step
+    if (this.startTime === null) {
+      this.startTime = Date.now();
+    }
+
     if (this.currentIndex >= this.coordinates.length - 1) return null; // Достигли конца
 
     const start = this.coordinates[this.currentIndex];
@@ -82,10 +89,36 @@ export default class GeojsonSimulator {
     return { lat, lon, bearing };
   }
 
-  getEstimatedTime(): number {
-    if (this.currentIndex >= this.coordinates.length - 1) return 0; // Маршрут завершен
+  get elapsedTime(): number {
+    if (this.startTime === null) return 0;
+    return (Date.now() - this.startTime) / 1000; // Return elapsed time in seconds
+  }
 
-    if (this.speed === 0) return Infinity;
+  get traveledDistance(): number {
+    if (this.currentIndex === 0 && this.progress === 0) return 0;
+
+    let distance = 0;
+
+    // Add distance for completed segments
+    for (let i = 0; i < this.currentIndex; i++) {
+      const start = this.coordinates[i];
+      const end = this.coordinates[i + 1];
+      distance += this.getDistance(start, end);
+    }
+
+    // Add partial distance for current segment
+    if (this.currentIndex < this.coordinates.length - 1) {
+      const start = this.coordinates[this.currentIndex];
+      const end = this.coordinates[this.currentIndex + 1];
+      const segmentDistance = this.getDistance(start, end);
+      distance += segmentDistance * this.progress;
+    }
+
+    return distance;
+  }
+
+  get remainingDistance(): number {
+    if (this.currentIndex >= this.coordinates.length - 1) return 0;
 
     let remainingDistance = 0;
 
@@ -103,7 +136,14 @@ export default class GeojsonSimulator {
       }
     }
 
-    // Время = Расстояние / Скорость
-    return remainingDistance / this.speed;
+    return remainingDistance
+  }
+
+  get estimatedTime(): number {
+    if (this.currentIndex >= this.coordinates.length - 1) return 0;
+
+    if (this.speed === 0) return Infinity;
+
+    return this.remainingDistance / this.speed;
   }
 }

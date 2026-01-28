@@ -3,7 +3,7 @@ import "./App.css";
 import MapWithMovingMarker from "./map/Map";
 import { Form } from "./form/Form";
 import { connectToBikeAndReadData } from "./ble/ble";
-import { AVERAGE_SPEED_KMH } from "./utils/constants";
+import { DEMO_SPEED_KMH } from "./utils/constants";
 import { Feature, LineString } from "geojson";
 import { DecodedIndoorBikeData } from "./ble/indoorBikeData";
 
@@ -12,13 +12,15 @@ function App() {
   const [feature, setFeature] = useState<Feature<LineString> | undefined>(undefined);
   const [speed, setSpeed] = useState<number>(0);
   const [heartRate, setHeartRate] = useState<number>(0);
+  const [cadence, setCadence] = useState<number>(0);
+  const [power, setPower] = useState<number>(0);
 
   async function onStart(demo: boolean, feature: Feature<LineString>) {
     try {
       setFeature(feature);
 
       if (demo) {
-        setSpeed(AVERAGE_SPEED_KMH);
+        setSpeed(DEMO_SPEED_KMH);
       } else {
         await connectToBikeAndReadData((data: DecodedIndoorBikeData) => {
           if (data.speed !== undefined) {
@@ -26,6 +28,12 @@ function App() {
           }
           if (data.heartRate !== undefined) {
             setHeartRate(data.heartRate);
+          }
+          if (data.cadence !== undefined) {
+            setCadence(data.heartRate);
+          }
+          if (data.power !== undefined) {
+            setPower(data.heartRate);
           }
         });
       }
@@ -54,6 +62,8 @@ function App() {
         feature={feature}
         speed={speed}
         heartRate={heartRate}
+        cadence={cadence}
+        power={power}
       />
     );
   }

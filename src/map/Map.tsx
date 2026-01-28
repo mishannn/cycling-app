@@ -23,7 +23,9 @@ const MapWithMovingMarker: React.FC<{
   feature: Feature<LineString>;
   speed: number;
   heartRate: number;
-}> = ({ feature, speed, heartRate }) => {
+  cadence: number;
+  power: number;
+}> = ({ feature, speed, heartRate, cadence, power }) => {
   const simulator = useMemo(() => new GeojsonSimulator(feature, 0), [feature]);
   const routeId = useMemo(() => generateRouteId(feature), [feature]);
   
@@ -108,7 +110,7 @@ const MapWithMovingMarker: React.FC<{
   }, [throttledPosition]);
 
   // Update estimate time
-  const throttledTime = useThrottle(simulator.getEstimatedTime(), { wait: TIME_UPDATE_INTERVAL_MS });
+  const throttledTime = useThrottle(simulator.estimatedTime, { wait: TIME_UPDATE_INTERVAL_MS });
 
   return (
     <div style={{ height: "100%", width: "100%" }}>
@@ -119,6 +121,11 @@ const MapWithMovingMarker: React.FC<{
       <SpeedDisplay 
         speed={speed} 
         heartRate={heartRate} 
+        cadence={cadence} 
+        power={power}
+        traveledDistance={simulator.traveledDistance}
+        remainingDistance={simulator.remainingDistance}
+        elapsedTime={simulator.elapsedTime}
         estimatedTime={throttledTime} 
       />
     </div>
