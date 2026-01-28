@@ -1,16 +1,23 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import GeojsonSimulator, { Position } from "../services/GeojsonSimulator";
-import { formatTime } from "../utils/time";
 import {
-  // SHOW_ROUTE_LINE,
   TIME_UPDATE_INTERVAL_MS,
-  UPDATE_INTERVAL_MS,
 } from "../utils/constants";
 import { Feature, LineString } from "geojson";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import bikeIcon from './bike.png'
 import { useThrottle } from "ahooks";
+import { SavedTrip, SavedTripPoint } from "./types/trip";
+import { generateRouteId } from "./utils/helpers";
+import { 
+  loadPreviousTripData, 
+  initializeMap, 
+  updateSimulatorSpeed, 
+  startPositionTracking, 
+  updateMarkerPosition, 
+  easeMapToPosition 
+} from "./utils/mapUtils";
+import SpeedDisplay from "./components/SpeedDisplay";
 
 const MapWithMovingMarker: React.FC<{
   feature: Feature<LineString>;
@@ -18,111 +25,61 @@ const MapWithMovingMarker: React.FC<{
   heartRate: number;
 }> = ({ feature, speed, heartRate }) => {
   const simulator = useMemo(() => new GeojsonSimulator(feature, 0), [feature]);
+  const routeId = useMemo(() => generateRouteId(feature), [feature]);
+  
+  // Previous trip state
+  const [previousTrip, setPreviousTrip] = useState<SavedTrip | null>(null);
+  const previousTripMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const previousTripIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tripRecordingRef = useRef<SavedTripPoint[]>([]);
+  const tripStartTimeRef = useRef<number>(Date.now());
+
+  // Load previous trip data when component mounts
+  useEffect(() => {
+    loadPreviousTripData(routeId, setPreviousTrip);
+  }, [routeId]);
 
   // Initialize map
-
   const mapRef = useRef<maplibregl.Map>(null);
   const markerRef = useRef<maplibregl.Marker>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!mapContainer.current) {
-      const msg = "Map container is not ready"
-      console.error(msg)
-      alert(msg)
-
-      return
+      const msg = "Map container is not ready";
+      console.error(msg);
+      alert(msg);
+      return;
     }
 
-    const center = {
-      lat: feature.geometry.coordinates[0][1],
-      lng: feature.geometry.coordinates[0][0],
-    }
+    // Initialize the map using our utility function
+    const { map, marker } = initializeMap(
+      mapContainer.current,
+      feature,
+      previousTrip,
+      (marker) => { previousTripMarkerRef.current = marker; },
+      (interval) => { previousTripIntervalRef.current = interval; }
+    );
 
-    const map = new maplibregl.Map({
-      container: mapContainer.current,
-      style: "https://tiles.openfreemap.org/styles/liberty",
-      center: center,
-      zoom: 18,
-      pitch: 0,
-      bearing: 0,
-      canvasContextAttributes: { antialias: true },
-      attributionControl: false,
-    });
-
-    map.on("load", () => {
-      map.addControl(new maplibregl.NavigationControl({
-        showZoom: true,
-        visualizePitch: false,
-        visualizeRoll: false,
-        showCompass: false,
-      }));
-
-      map.addControl(new maplibregl.AttributionControl(), "bottom-left")
-
-      map.addLayer({
-        id: "3d-buildings",
-        source: "openmaptiles",
-        "source-layer": "building",
-        type: "fill-extrusion",
-        minzoom: 15,
-        paint: {
-          "fill-extrusion-color": "#aaa",
-          "fill-extrusion-height": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            15,
-            0,
-            16,
-            ["get", "height"]
-          ],
-          "fill-extrusion-base": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            15,
-            0,
-            16,
-            ["get", "min_height"]
-          ],
-          "fill-extrusion-opacity": 0.8,
-        },
-      });
-
-      const el = document.createElement('div');
-      el.className = 'marker';
-      el.style.backgroundImage =
-        `url(${bikeIcon})`;
-      el.style.backgroundSize = 'cover'
-      el.style.width = `60px`;
-      el.style.height = `60px`;
-
-      // add marker to map
-      const marker = new maplibregl.Marker({ element: el })
-      marker.setLngLat(center);
-      marker.setRotationAlignment("map")
-      marker.addTo(map)
-
-      markerRef.current = marker
-    });
-
-    mapRef.current = map
+    mapRef.current = map;
+    markerRef.current = marker;
 
     return () => {
-      mapRef.current = null
-      map.remove()
+      // Clean up intervals and markers
+      if (previousTripIntervalRef.current) {
+        clearInterval(previousTripIntervalRef.current);
+      }
+      mapRef.current = null;
+      map.remove();
     };
-  }, [feature]);
+  }, [feature, previousTrip]);
 
   // Update speed
-
   useEffect(() => {
-    simulator.setSpeedKmh(speed);
+    updateSimulatorSpeed(simulator, speed);
   }, [simulator, speed]);
 
-  // Watch position
-
+  // Watch position and record trip
   const [position, setPosition] = useState<Position>({
     lon: feature.geometry.coordinates[0][0],
     lat: feature.geometry.coordinates[0][1],
@@ -130,36 +87,27 @@ const MapWithMovingMarker: React.FC<{
   });
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newPosition = simulator.nextStep(UPDATE_INTERVAL_MS / 1000);
-      if (newPosition) {
-        setPosition(newPosition);
-      } else {
-        clearInterval(interval);
-      }
-    }, UPDATE_INTERVAL_MS);
+    const interval = startPositionTracking(
+      simulator,
+      routeId,
+      tripRecordingRef,
+      tripStartTimeRef,
+      setPosition
+    );
 
     return () => clearInterval(interval);
-  }, [simulator]);
+  }, [simulator, routeId]);
 
   useEffect(() => {
-    markerRef.current?.setLngLat(position)
-    markerRef.current?.setRotation(position.bearing)
-  }, [position])
+    updateMarkerPosition(markerRef.current, position);
+  }, [position]);
 
-  const throttledPosition = useThrottle(position, { wait: 1000 })
+  const throttledPosition = useThrottle(position, { wait: 1000 });
   useEffect(() => {
-    mapRef.current?.easeTo({
-      center: throttledPosition,
-      bearing: throttledPosition.bearing,
-      animate: true,
-      duration: 1000,
-      easing: (val) => val,
-    })
-  }, [throttledPosition])
+    easeMapToPosition(mapRef.current, throttledPosition);
+  }, [throttledPosition]);
 
   // Update estimate time
-
   const throttledTime = useThrottle(simulator.getEstimatedTime(), { wait: TIME_UPDATE_INTERVAL_MS });
 
   return (
@@ -168,23 +116,11 @@ const MapWithMovingMarker: React.FC<{
         ref={mapContainer}
         style={{ width: "100%", height: "100vh" }}
       />
-      <div
-        style={{
-          position: "fixed",
-          right: 0,
-          bottom: 0,
-          zIndex: 1000000,
-          background: "white",
-          padding: "8px",
-          fontFamily: "monospace",
-        }}
-      >
-        Speed: {speed.toFixed()} km/h
-        <br />
-        HR: {heartRate.toFixed()} bpm
-        <br />
-        Estimated time: {formatTime(throttledTime)}
-      </div>
+      <SpeedDisplay 
+        speed={speed} 
+        heartRate={heartRate} 
+        estimatedTime={throttledTime} 
+      />
     </div>
   );
 };

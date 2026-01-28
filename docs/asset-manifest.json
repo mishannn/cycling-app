@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/cycling-app/static/css/main.ab4d7f28.css",
-    "main.js": "/cycling-app/static/js/main.263cb0c9.js",
+    "main.js": "/cycling-app/static/js/main.5e894512.js",
     "static/js/344.274add5a.chunk.js": "/cycling-app/static/js/344.274add5a.chunk.js",
     "index.html": "/cycling-app/index.html",
     "main.ab4d7f28.css.map": "/cycling-app/static/css/main.ab4d7f28.css.map",
-    "main.263cb0c9.js.map": "/cycling-app/static/js/main.263cb0c9.js.map",
+    "main.5e894512.js.map": "/cycling-app/static/js/main.5e894512.js.map",
     "344.274add5a.chunk.js.map": "/cycling-app/static/js/344.274add5a.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.ab4d7f28.css",
-    "static/js/main.263cb0c9.js"
+    "static/js/main.5e894512.js"
   ]
 }
