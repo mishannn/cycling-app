@@ -8,6 +8,9 @@ import prettierConfig from "eslint-config-prettier"
 import globals from "globals"
 
 export default defineConfig([
+  {
+    ignores: ["docs", "**/*.test.{js,jsx,ts,tsx}"]
+  },
   js.configs.recommended,
   {
     files: ["**/*.{ts,tsx}"],
