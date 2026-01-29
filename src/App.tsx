@@ -30,10 +30,10 @@ function App() {
             setHeartRate(data.heartRate);
           }
           if (data.cadence !== undefined) {
-            setCadence(data.heartRate);
+            setCadence(data.cadence);
           }
           if (data.power !== undefined) {
-            setPower(data.heartRate);
+            setPower(data.power);
           }
         });
       }
