@@ -20,16 +20,13 @@ export function formatTime(seconds: number): string {
     result += `${hours}h `;
   }
 
-  if (minutes > 0) {
+  if (minutes > 0 || hours > 0) {
     result +=
       hours > 0 ? `${String(minutes).padStart(2, "0")}m ` : `${minutes}m `;
   }
 
   // Добавляем секунды (всегда)
-  result +=
-    minutes > 0
-      ? `${String(remainingSeconds).padStart(2, "0")}s`
-      : `${remainingSeconds}s`;
+  result += `${String(remainingSeconds).padStart(2, "0")}s`
 
   return result.trim();
 }

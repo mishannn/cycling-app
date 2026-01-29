@@ -10,7 +10,7 @@ export default class GeojsonSimulator {
   private coordinates: number[][];
   private currentIndex: number;
   private progress: number;
-  private speed!: number;
+  private _speed!: number;
   private startTime: number | null = null;
 
   constructor(feature: Feature, speedKmh: number = 10) {
@@ -26,12 +26,16 @@ export default class GeojsonSimulator {
     this.startTime = null;
   }
 
+  get speed(): number {
+    return this._speed;
+  }
+
   set speedKmh(speedKmh: number) {
-    this.speed = (speedKmh * 1000) / 3600; // Переводим в м/с
+    this._speed = (speedKmh * 1000) / 3600; // Переводим в м/с
   }
 
   get speedKmh(): number {
-    return (this.speed * 3600) / 1000; // Переводим в м/с
+    return (this._speed * 3600) / 1000; // Переводим в м/с
   }
 
   getDistance(coord1: number[], coord2: number[]): number {
@@ -73,7 +77,7 @@ export default class GeojsonSimulator {
     const start = this.coordinates[this.currentIndex];
     const end = this.coordinates[this.currentIndex + 1];
     const distance = this.getDistance(start, end);
-    const moveDist = this.speed * deltaTime;
+    const moveDist = this._speed * deltaTime;
 
     this.progress += moveDist / distance;
     if (this.progress >= 1) {
@@ -142,8 +146,8 @@ export default class GeojsonSimulator {
   get estimatedTime(): number {
     if (this.currentIndex >= this.coordinates.length - 1) return 0;
 
-    if (this.speed === 0) return Infinity;
+    if (this._speed === 0) return Infinity;
 
-    return this.remainingDistance / this.speed;
+    return this.remainingDistance / this._speed;
   }
 }
