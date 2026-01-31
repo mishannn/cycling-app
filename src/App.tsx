@@ -6,6 +6,7 @@ import { connectToBikeAndReadData } from "./ble/ble";
 import { DEMO_SPEED_KMH } from "./utils/constants";
 import { Feature, LineString } from "geojson";
 import { DecodedIndoorBikeData } from "./ble/indoorBikeData";
+import { UserData } from "./map/types/userData";
 
 function App() {
   const [running, setRunning] = useState<boolean>(false);
@@ -14,10 +15,12 @@ function App() {
   const [heartRate, setHeartRate] = useState<number>(0);
   const [cadence, setCadence] = useState<number>(0);
   const [power, setPower] = useState<number>(0);
+  const [userData, setUserData] = useState<UserData | undefined>(undefined);
 
-  async function onStart(demo: boolean, feature: Feature<LineString>) {
+  async function onStart(demo: boolean, feature: Feature<LineString>, userData: UserData) {
     try {
       setFeature(feature);
+      setUserData(userData);
 
       if (demo) {
         setSpeed(DEMO_SPEED_KMH);
@@ -64,6 +67,7 @@ function App() {
         heartRate={heartRate}
         cadence={cadence}
         power={power}
+        userData={userData}
       />
     );
   }

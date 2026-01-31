@@ -9,15 +9,17 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useThrottle } from "ahooks";
 import { SavedTrip, SavedTripPoint } from "./types/trip";
 import { generateRouteId } from "./utils/helpers";
-import { 
-  loadPreviousTripData, 
-  initializeMap, 
-  updateSimulatorSpeed, 
-  startPositionTracking, 
-  updateMarkerPosition, 
-  easeMapToPosition 
+import {
+  loadPreviousTripData,
+  initializeMap,
+  updateSimulatorSpeed,
+  startPositionTracking,
+  updateMarkerPosition,
+  easeMapToPosition
 } from "./utils/mapUtils";
 import SpeedDisplay from "./components/SpeedDisplay";
+import { Box } from "@mui/material";
+import { UserData } from "./types/userData";
 
 const MapWithMovingMarker: React.FC<{
   feature: Feature<LineString>;
@@ -25,10 +27,11 @@ const MapWithMovingMarker: React.FC<{
   heartRate: number;
   cadence: number;
   power: number;
-}> = ({ feature, speed, heartRate, cadence, power }) => {
+  userData?: UserData;
+}> = ({ feature, speed, heartRate, cadence, power, userData }) => {
   const simulator = useMemo(() => new GeojsonSimulator(feature, 0), [feature]);
   const routeId = useMemo(() => generateRouteId(feature), [feature]);
-  
+
   // Previous trip state
   const [previousTrip, setPreviousTrip] = useState<SavedTrip | null>(null);
   const previousTripMarkerRef = useRef<maplibregl.Marker | null>(null);
@@ -113,22 +116,22 @@ const MapWithMovingMarker: React.FC<{
   const throttledTime = useThrottle(simulator.estimatedTime, { wait: TIME_UPDATE_INTERVAL_MS });
 
   return (
-    <div style={{ height: "100%", width: "100%" }}>
+    <Box display="grid" gridTemplateRows="1fr auto" sx={{ width: "100%", height: "100%" }}>
       <div
         ref={mapContainer}
-        style={{ width: "100%", height: "100vh" }}
       />
-      <SpeedDisplay 
-        speed={speed} 
-        heartRate={heartRate} 
-        cadence={cadence} 
+      <SpeedDisplay
+        speed={speed}
+        heartRate={heartRate}
+        cadence={cadence}
         power={power}
         traveledDistance={simulator.traveledDistance}
         remainingDistance={simulator.remainingDistance}
         elapsedTime={simulator.elapsedTime}
-        estimatedTime={throttledTime} 
+        estimatedTime={throttledTime}
+        userData={userData}
       />
-    </div>
+    </Box>
   );
 };
 

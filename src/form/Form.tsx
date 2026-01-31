@@ -8,15 +8,22 @@ import {
   Box,
   Button,
   Checkbox,
+  FormControl,
   FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
   Typography,
   Card,
   CardContent,
   Alert
 } from "@mui/material";
+import { UserData, UserSex } from "src/map/types/userData";
+import { useLocalStorageState } from "ahooks";
 
 interface FormProps {
-  onStart: (demo: boolean, feature: Feature<LineString>) => void;
+  onStart: (demo: boolean, feature: Feature<LineString>, userData: UserData) => void;
 }
 
 function getFeatureLengthForLabel(feature: Feature<LineString>): string {
@@ -31,6 +38,10 @@ export function Form({ onStart }: FormProps) {
   const [route, setRoute] = useState<Feature<LineString> | undefined>(undefined)
   const [reverse, setReverse] = useState<boolean>(false);
   const [fileName, setFileName] = useState<string | undefined>(undefined);
+  const [sex, setSex] = useLocalStorageState<UserSex>("userSex", { defaultValue: 'male' });
+  const [age, setAge] = useLocalStorageState<number>("userAge", { defaultValue: 30 });
+  const [height, setHeight] = useLocalStorageState<number>("userHeight", { defaultValue: 170 });
+  const [weight, setWeight] = useLocalStorageState<number>("userWeight", { defaultValue: 70 });
 
   function getFeatureByNameWithReversingIfNeeded(feature: Feature<LineString>): Feature<LineString> {
     if (reverse) {
@@ -47,7 +58,7 @@ export function Form({ onStart }: FormProps) {
     }
 
     const feature = getFeatureByNameWithReversingIfNeeded(route);
-    onStart(false, feature);
+    onStart(false, feature, { sex, age, height, weight });
   }
 
   function onDemo() {
@@ -57,7 +68,7 @@ export function Form({ onStart }: FormProps) {
     }
 
     const feature = getFeatureByNameWithReversingIfNeeded(route);
-    onStart(true, feature);
+    onStart(true, feature, { sex, age, height, weight });
   }
 
   function onSelectFile(event: ChangeEvent<HTMLInputElement>) {
@@ -101,7 +112,7 @@ export function Form({ onStart }: FormProps) {
           <Typography variant="h5" component="h1" gutterBottom align="center">
             Cycling Route Setup
           </Typography>
-          
+
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box>
               <Button
@@ -118,7 +129,55 @@ export function Form({ onStart }: FormProps) {
                 />
               </Button>
             </Box>
-            
+
+            <Box>
+              <FormControl fullWidth>
+                <InputLabel id="sex-label">Sex</InputLabel>
+                <Select
+                  labelId="sex-label"
+                  value={sex}
+                  label="Sex"
+                  onChange={(event) => setSex(event.target.value as UserSex)}
+                >
+                  <MenuItem value="male">Male</MenuItem>
+                  <MenuItem value="female">Female</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Box>
+              <TextField
+                fullWidth
+                type="number"
+                label="Age (years)"
+                value={age}
+                onChange={(event) => setAge(Number(event.target.value))}
+                InputProps={{ inputProps: { min: 1, max: 120 } }}
+              />
+            </Box>
+
+            <Box>
+              <TextField
+                fullWidth
+                type="number"
+                label="Height (cm)"
+                value={height}
+                onChange={(event) => setHeight(Number(event.target.value))}
+                InputProps={{ inputProps: { min: 50, max: 250 } }}
+              />
+            </Box>
+
+            <Box>
+              <TextField
+                fullWidth
+                type="number"
+                label="Weight (kg)"
+                value={weight}
+                onChange={(event) => setWeight(Number(event.target.value))}
+                InputProps={{ inputProps: { min: 20, max: 200 } }}
+              />
+            </Box>
+
             <Box>
               <FormControlLabel
                 control={
@@ -130,28 +189,28 @@ export function Form({ onStart }: FormProps) {
                 label="Reverse"
               />
             </Box>
-            
+
             <Box>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 2 }}>
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  onClick={onConnect}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => onConnect()}
                   size="large"
                 >
                   Connect
                 </Button>
-                <Button 
-                  variant="outlined" 
-                  color="primary" 
-                  onClick={onDemo}
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => onDemo()}
                   size="large"
                 >
                   Demo
                 </Button>
               </Box>
             </Box>
-            
+
             {route && (
               <Box>
                 <Alert severity="info">

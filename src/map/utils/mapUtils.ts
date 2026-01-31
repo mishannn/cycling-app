@@ -6,7 +6,7 @@ import { startPreviousTripAnimation } from "./helpers";
 import bikeIcon from '../bike.png';
 import bikeBWIcon from '../bike_bw.png';
 import { UPDATE_INTERVAL_MS } from "../../utils/constants";
-import GeojsonSimulator from "@/services/GeojsonSimulator";
+import GeojsonSimulator from "../../services/GeojsonSimulator";
 
 // Load previous trip data from localStorage
 export const loadPreviousTripData = (
