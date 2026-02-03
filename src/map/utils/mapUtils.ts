@@ -31,6 +31,7 @@ export const loadPreviousTripData = (
 export const initializeMap = (
   mapContainer: HTMLDivElement,
   feature: Feature<LineString>,
+  zoom: number,
   previousTrip: SavedTrip | null,
   setPreviousTripMarkerRef: (marker: maplibregl.Marker | null) => void,
   setPreviousTripIntervalRef: (interval: ReturnType<typeof setInterval> | null) => void
@@ -44,7 +45,7 @@ export const initializeMap = (
     container: mapContainer,
     style: "https://tiles.openfreemap.org/styles/liberty",
     center: center,
-    zoom: 18,
+    zoom,
     pitch: 0,
     bearing: 0,
     canvasContextAttributes: { antialias: true },

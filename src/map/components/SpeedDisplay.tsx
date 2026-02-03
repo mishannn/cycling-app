@@ -56,8 +56,8 @@ const SpeedDisplay: React.FC<SpeedDisplayProps> = ({
         Ride Metrics
       </Typography>
 
-      <Box display="flex" flexWrap="wrap" gap={2}>
-        <Box display="flex" alignItems="center" sx={{ minWidth: 120 }}>
+      <Box display="flex" flexWrap="wrap" flexBasis="100%" gap={2}>
+        <Box display="flex" alignItems="center" flexGrow={1} sx={{ minWidth: 120 }}>
           <Speed color="primary" sx={{ mr: 1, fontSize: 20 }} />
           <Box>
             <Typography variant="body2" color="text.secondary">
@@ -69,7 +69,7 @@ const SpeedDisplay: React.FC<SpeedDisplayProps> = ({
           </Box>
         </Box>
 
-        <Box display="flex" alignItems="center" sx={{ minWidth: 120 }}>
+        <Box display="flex" alignItems="center" flexGrow={1} sx={{ minWidth: 120 }}>
           <Favorite color="error" sx={{ mr: 1, fontSize: 20 }} />
           <Box>
             <Typography variant="body2" color="text.secondary">
@@ -81,7 +81,7 @@ const SpeedDisplay: React.FC<SpeedDisplayProps> = ({
           </Box>
         </Box>
 
-        <Box display="flex" alignItems="center" sx={{ minWidth: 120 }}>
+        <Box display="flex" alignItems="center" flexGrow={1} sx={{ minWidth: 120 }}>
           <DirectionsBike color="secondary" sx={{ mr: 1, fontSize: 20 }} />
           <Box>
             <Typography variant="body2" color="text.secondary">
@@ -93,7 +93,7 @@ const SpeedDisplay: React.FC<SpeedDisplayProps> = ({
           </Box>
         </Box>
 
-        <Box display="flex" alignItems="center" sx={{ minWidth: 120 }}>
+        <Box display="flex" alignItems="center" flexGrow={1} sx={{ minWidth: 120 }}>
           <Whatshot color="warning" sx={{ mr: 1, fontSize: 20 }} />
           <Box>
             <Typography variant="body2" color="text.secondary">
@@ -117,7 +117,7 @@ const SpeedDisplay: React.FC<SpeedDisplayProps> = ({
           </Box>
         </Box> */}
 
-        <Box display="flex" alignItems="center" sx={{ minWidth: 120 }}>
+        <Box display="flex" alignItems="center" flexGrow={1} sx={{ minWidth: 120 }}>
           <Route color="success" sx={{ mr: 1, fontSize: 20 }} />
           <Box>
             <Typography variant="body2" color="text.secondary">
@@ -129,7 +129,7 @@ const SpeedDisplay: React.FC<SpeedDisplayProps> = ({
           </Box>
         </Box>
 
-        <Box display="flex" alignItems="center" sx={{ minWidth: 120 }}>
+        <Box display="flex" alignItems="center" flexGrow={1} sx={{ minWidth: 120 }}>
           <Route color="info" sx={{ mr: 1, fontSize: 20 }} />
           <Box>
             <Typography variant="body2" color="text.secondary">
@@ -141,7 +141,7 @@ const SpeedDisplay: React.FC<SpeedDisplayProps> = ({
           </Box>
         </Box>
 
-        <Box display="flex" alignItems="center" sx={{ minWidth: 120 }}>
+        <Box display="flex" alignItems="center" flexGrow={1} sx={{ minWidth: 120 }}>
           <AccessTime color="primary" sx={{ mr: 1, fontSize: 20 }} />
           <Box>
             <Typography variant="body2" color="text.secondary">
@@ -153,7 +153,7 @@ const SpeedDisplay: React.FC<SpeedDisplayProps> = ({
           </Box>
         </Box>
 
-        <Box display="flex" alignItems="center" sx={{ minWidth: 120 }}>
+        <Box display="flex" alignItems="center" flexGrow={1} sx={{ minWidth: 120 }}>
           <Schedule color="secondary" sx={{ mr: 1, fontSize: 20 }} />
           <Box>
             <Typography variant="body2" color="text.secondary">

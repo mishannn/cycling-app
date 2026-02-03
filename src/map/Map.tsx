@@ -21,6 +21,8 @@ import SpeedDisplay from "./components/SpeedDisplay";
 import { Box } from "@mui/material";
 import { UserData } from "./types/userData";
 
+const MAP_INITIAL_ZOOM_LOCALSTORAGE_KEY = "mapDefaultZoom"
+
 const MapWithMovingMarker: React.FC<{
   feature: Feature<LineString>;
   speed: number;
@@ -61,10 +63,15 @@ const MapWithMovingMarker: React.FC<{
     const { map, marker } = initializeMap(
       mapContainer.current,
       feature,
+      parseInt(localStorage.getItem(MAP_INITIAL_ZOOM_LOCALSTORAGE_KEY) ?? "") || 16,
       previousTrip,
       (marker) => { previousTripMarkerRef.current = marker; },
       (interval) => { previousTripIntervalRef.current = interval; }
     );
+
+    map.on("zoomend", (e) => {
+      localStorage.setItem(MAP_INITIAL_ZOOM_LOCALSTORAGE_KEY, e.target.getZoom().toFixed())
+    })
 
     mapRef.current = map;
     markerRef.current = marker;
